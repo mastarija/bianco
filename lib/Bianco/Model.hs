@@ -1,0 +1,2 @@
+module Bianco.Model where
+

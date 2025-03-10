@@ -1,0 +1,4 @@
+packages    : bianco.cabal
+
+constraints : base >=4.0 && <5
+            , miso >=1.8 && <1.9
