@@ -32,11 +32,13 @@ library
   import            : core
   hs-source-dirs    : lib
   exposed-modules   : Bianco.Model
-  build-depends     : int
+  -- build-depends     :
 
 executable app
   import            : core
   main-is           : Main.hs
   hs-source-dirs    : src
   build-depends     : miso
+                    , aeson
                     , bianco
+                    , containers
