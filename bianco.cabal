@@ -16,7 +16,6 @@ author              : Luka Hadžiegrić
 maintainer          : luka@mastarija.com
 
 license             : MIT
-license-file        : LICENSE
 copyright           : Copyright (C) Luka Hadžiegrić 2025
 
 source-repository head
@@ -38,3 +37,8 @@ executable app
   main-is           : Main.hs
   hs-source-dirs    : src
   build-depends     : bianco
+                    , mtl
+                    , miso
+                    , aeson
+                    , jsaddle
+                    , containers
