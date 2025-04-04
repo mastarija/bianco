@@ -36,8 +36,7 @@ executable app
   import            : core
   main-is           : Main.hs
   hs-source-dirs    : src
-  build-depends     : bianco
-                    , mtl
+  build-depends     : mtl
                     , miso
                     , aeson
                     , jsaddle

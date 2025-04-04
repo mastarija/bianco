@@ -6,9 +6,12 @@ constraints: base       < 5
            , containers < 0.9
            , jsaddle    < 0.10
 
+allow-newer: ghcjs-base:hashable
+
+with-hc-pkg: javascript-unknown-ghcjs-ghc-pkg
 with-compiler: javascript-unknown-ghcjs-ghc
 
 source-repository-package
     type: git
     location: https://github.com/dmjio/miso.git
-    tag: 67de2f211b2cbab7b00e29e5e28b6da9706671d6
+    tag: 949ce1a943748e81eb38116e3f2de6aa2807d05e

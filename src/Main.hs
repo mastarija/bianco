@@ -14,16 +14,13 @@
 
 module Main where
 
-import Language.Javascript.JSaddle.Null ( run )
+import           Control.Monad.State
 import           Data.Aeson hiding (Object)
-import           Data.Bool (bool)
+import           Data.Bool
 import qualified Data.Map as M
-import           GHC.Generics (Generic)
+import           GHC.Generics
 
-import           Miso (App(..), LogLevel(..), Effect)
-import           Miso (focus, noEff, consoleLog, startApp, defaultEvents, (#>))
-import           Miso.Html
-import           Miso.Event.Types ( KeyCode(..) )
+import           Miso
 import           Miso.String (MisoString)
 import qualified Miso.String as S
 
@@ -94,47 +91,63 @@ data Msg
 
 main :: IO ()
 main = run $ startApp app
+  { events = defaultEvents <> keyboardEvents
+  , initialAction = Just FocusOnInput
+  }
 
-app :: App Model Msg
-app = App emptyModel updateModel viewModel [] defaultEvents FocusOnInput Nothing Off
+app :: App Effect Model Msg ()
+app = defaultApp emptyModel updateModel viewModel
 
-updateModel :: Msg -> Model -> Effect Msg Model
-updateModel NoOp m = pure m
-updateModel FocusOnInput m = (const NoOp <$> focus "input-box") #> m
-updateModel (CurrentTime time) m = (const NoOp <$> ( consoleLog $ S.ms (show time) ) ) #> m
-updateModel Add m = noEff m
-                    { uid = uid m + 1
-                    , field = mempty
-                    , entries = entries m <> [newEntry ( field m ) ( uid m ) | not $ S.null $ field m ]
-                    }
-updateModel (UpdateField str) m = pure $ m { field = str }
-updateModel (EditingEntry id' isEditing) m = pure $ m { entries =
+updateModel :: Msg -> Effect Model Msg ()
+updateModel NoOp = pure ()
+updateModel FocusOnInput = io (focus "input-box")
+updateModel (CurrentTime time) = io $ consoleLog $ S.ms (show time)
+updateModel Add = do
+    model@Model{..} <- get
+    noEff
+        model
+            { uid = uid + 1
+            , field = mempty
+            , entries = entries <> [newEntry field uid | not $ S.null field]
+            }
+updateModel (UpdateField str) = modify update
+  where
+    update m = m { field = str }
+updateModel (EditingEntry id' isEditing) = do
+  modify $ \m ->
+    m { entries =
           filterMap (entries m) (\t -> eid t == id') $ \t ->
             t { editing = isEditing
               , focussed = isEditing
               }
       }
-updateModel (UpdateEntry id' task) m = pure $ m
+updateModel (UpdateEntry id' task) =
+  modify $ \m -> m
     { entries = filterMap (entries m) ((== id') . eid) $ \t ->
         t { description = task }
     }
-updateModel (Delete id') m = pure $ m
+updateModel (Delete id') =
+  modify $ \m -> m
    { entries = filter (\t -> eid t /= id') (entries m)
    }
-updateModel DeleteComplete m = pure $ m
+updateModel DeleteComplete = do
+  modify $ \m -> m
     { entries = filter (not . completed) (entries m)
     }
-updateModel (Check id' isCompleted) m = pure $ m
+updateModel (Check id' isCompleted) = do
+  modify $ \m -> m
     { entries =
         filterMap (entries m) (\t -> eid t == id') $ \t ->
           t { completed = isCompleted }
     }
-updateModel (CheckAll isCompleted) m = pure $ m
+updateModel (CheckAll isCompleted) =
+  modify $ \m -> m
     { entries =
         filterMap (entries m) (const True) $ \t ->
           t { completed = isCompleted }
     }
-updateModel (ChangeVisibility v) m = pure $ m { visibility = v }
+updateModel (ChangeVisibility v) =
+    modify $ \m -> m { visibility = v }
 
 filterMap :: [a] -> (a -> Bool) -> (a -> a) -> [a]
 filterMap xs predicate f = go' xs
